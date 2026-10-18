@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="حساب المريض">
+<title>حساب المريض</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1f4e78">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f3f6fa;--card:#fff;--tx:#1b2733;--mut:#6b7a89;--pri:#1f4e78;--acc:#e8f1fa;--bd:#d5dde6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10171e;--card:#1a232c;--tx:#e8eef4;--mut:#93a3b3;--pri:#6fb1e8;--acc:#223446;--bd:#2d3b48}}
+:root[data-theme="dark"]{--bg:#10171e;--card:#1a232c;--tx:#e8eef4;--mut:#93a3b3;--pri:#6fb1e8;--acc:#223446;--bd:#2d3b48}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Arial,Tahoma,sans-serif}
+main{max-width:480px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:8px 0 16px;color:var(--pri)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+label{display:block;font-size:14px;color:var(--mut);margin-bottom:6px}
+input{width:100%;font-size:28px;padding:12px;border:2px solid var(--pri);border-radius:10px;background:var(--bg);color:var(--tx);text-align:center;font-family:inherit}
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--bd);font-size:17px}
+.row:last-child{border:0}
+.row b{font-size:19px}
+.total{background:var(--acc);border-radius:10px;padding:14px;margin-top:8px;font-size:20px;font-weight:bold;display:flex;justify-content:space-between;color:var(--pri)}
+.total span:last-child{font-size:30px}
+details{font-size:14px;color:var(--mut)}
+summary{cursor:pointer;padding:4px 0}
+.set{display:flex;gap:8px;margin-top:10px}
+.set div{flex:1}
+.set input{font-size:18px;padding:8px}
+button{width:100%;margin-top:10px;padding:12px;font-size:16px;border:0;border-radius:10px;background:var(--pri);color:var(--bg);font-family:inherit}
+.hint{font-size:12px;color:var(--mut);margin-top:8px;line-height:1.6}
+</style>
+</head>
+<body>
+<main>
+<h1>حساب إجمالي المريض</h1>
+<div class="card">
+<label for="amt">حساب المريض (جنيه)</label>
+<input id="amt" type="text" inputmode="decimal" placeholder="0" autocomplete="off">
+</div>
+<div class="card" id="res">
+<div class="row"><span>الحساب</span><b id="rA">—</b></div>
+<div class="row"><span>الـ 1٪</span><b id="rB">—</b></div>
+<div class="row"><span>الـ 5٪ (شاملة الكسور)</span><b id="rC">—</b></div>
+<div class="total"><span>الإجمالي</span><span id="rD">—</span></div>
+</div>
+<div class="card">
+<details>
+<summary>الإعدادات</summary>
+<div class="set">
+<div><label>نسبة 1٪</label><input id="p1" type="text" inputmode="decimal" value="1"></div>
+<div><label>حد أقصى</label><input id="cap" type="text" inputmode="decimal" value="20"></div>
+<div><label>نسبة 5٪</label><input id="p2" type="text" inputmode="decimal" value="5"></div>
+</div>
+<button id="sv" type="button">حفظ الإعدادات</button>
+<p class="hint">الـ 1٪ بحد أقصى 20 جنيه. الإجمالي بيتقرّب لأعلى لأقرب جنيه صحيح، والكسر بيتضاف على الـ 5٪.</p>
+</details>
+</div>
+</main>
+<script>
+var $=function(i){return document.getElementById(i)};
+function num(s){
+  s=String(s||"").replace(/[٠-٩]/g,function(d){return "٠١٢٣٤٥٦٧٨٩".indexOf(d)})
+   .replace(/[۰-۹]/g,function(d){return "۰۱۲۳۴۵۶۷۸۹".indexOf(d)})
+   .replace(/[٫,]/g,".").replace(/[^0-9.]/g,"");
+  var n=parseFloat(s);return isNaN(n)?0:n;
+}
+function fmt(c){ // c = قروش (integer)
+  var neg=c<0;c=Math.abs(c);
+  var j=Math.floor(c/100),k=c%100;
+  var t=String(j).replace(/\B(?=(\d{3})+(?!\d))/g,",");
+  return (neg?"-":"")+t+(k?"."+(k<10?"0":"")+k:"");
+}
+function calc(){
+  var a=Math.round(num($("amt").value)*100);
+  if(!a){["rA","rB","rC","rD"].forEach(function(i){$(i).textContent="—"});return}
+  var p1=num($("p1").value)/100,cap=Math.round(num($("cap").value)*100),p2=num($("p2").value)/100;
+  var b=Math.min(Math.round(a*p1),cap);
+  var c5=Math.round(a*p2);
+  var tot=Math.ceil((a+b+c5)/100)*100;
+  var c=tot-a-b;
+  $("rA").textContent=fmt(a);$("rB").textContent=fmt(b);$("rC").textContent=fmt(c);$("rD").textContent=fmt(tot);
+}
+$("amt").addEventListener("input",calc);
+["p1","cap","p2"].forEach(function(i){$(i).addEventListener("input",calc)});
+try{
+  var s=JSON.parse(localStorage.getItem("pc_set")||"null");
+  if(s){$("p1").value=s.p1;$("cap").value=s.cap;$("p2").value=s.p2}
+}catch(e){}
+$("sv").addEventListener("click",function(){
+  try{localStorage.setItem("pc_set",JSON.stringify({p1:$("p1").value,cap:$("cap").value,p2:$("p2").value}))}catch(e){}
+  $("sv").textContent="تم الحفظ ✓";setTimeout(function(){$("sv").textContent="حفظ الإعدادات"},1500);
+});
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(function(){})}
+</script>
+</body>
+</html>
