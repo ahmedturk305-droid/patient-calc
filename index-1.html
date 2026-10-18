@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111822">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="حساب المريض">
+<title>حساب المريض</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#111822;color:#fff;font-family:"Cairo",Tahoma,Arial,sans-serif}
+body{padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:480px;margin:0 auto;padding:16px}
+.head{background:#0a0e15;border-radius:22px;text-align:center;padding:26px 10px;font-size:26px;font-weight:800;margin-bottom:16px}
+.inp{background:#3b3118;border:2px solid #a88a2e;border-radius:22px;padding:16px 22px;margin-bottom:16px}
+.inp label{display:block;font-size:17px;font-weight:600;color:#e8e3d3}
+.inp .r{display:flex;align-items:center;gap:10px;direction:rtl}
+.inp .cur{font-size:22px;color:#9aa3ad;font-weight:700}
+#amt{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#fff;font:800 52px "Cairo",Tahoma,Arial,sans-serif;text-align:right;padding:0}
+#amt::placeholder{color:#6e757e}
+.res{background:#1e2a37;border:1px solid #2a3947;border-radius:22px;margin-bottom:16px;overflow:hidden}
+.row{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;font-size:22px;color:#c9d2dc;font-weight:600}
+.row+.row{border-top:1px solid #2d3b4a}
+.row b{color:#fff;font-size:30px;font-weight:800;direction:ltr}
+.tot{background:#0e8a99;border-radius:22px;padding:22px 24px;display:flex;justify-content:space-between;align-items:center;font-size:26px;font-weight:800}
+.tot span:last-child{font-size:56px;direction:ltr;line-height:1}
+.tot small{font-size:24px;margin-inline-start:4px}
+.clr{display:block;margin:22px auto;background:none;border:0;color:#9aa3ad;font:600 22px "Cairo",Tahoma,Arial,sans-serif;padding:8px 24px}
+details{background:#1a1f2c;border-radius:22px;padding:18px 22px}
+summary{cursor:pointer;color:#aab3be;font-size:20px;font-weight:600;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"▼ ";font-size:16px}
+details:not([open]) summary::before{content:"◀ "}
+.f{display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:20px;color:#e6ebf0;font-weight:600}
+.f input{width:44%;background:#1e2a37;border:1px solid #2d3b4a;border-radius:16px;color:#fff;font:700 24px "Cairo",Tahoma,Arial,sans-serif;text-align:center;padding:14px 6px}
+.note{font-size:13px;color:#7f8a96;margin-top:14px;line-height:1.7;font-weight:400}
+</style>
+</head>
+<body>
+<main>
+<div class="head">حساب المريض</div>
+<div class="inp">
+<label for="amt">اكتب الحساب هنا</label>
+<div class="r"><input id="amt" type="text" inputmode="decimal" placeholder="0" autocomplete="off"><span class="cur">ج</span></div>
+</div>
+<div class="res">
+<div class="row"><span>رسوم 1٪</span><b id="rB">0.00</b></div>
+<div class="row"><span>رسوم 5٪</span><b id="rC">0.00</b></div>
+</div>
+<div class="tot"><span>الإجمالي</span><span><span id="rD">0</span><small>ج</small></span></div>
+<button class="clr" id="clr" type="button">مسح</button>
+<details>
+<summary>الإعدادات</summary>
+<div class="f"><span>الرسوم الثابتة (ج)</span><input id="cap" type="text" inputmode="decimal" value="20"></div>
+<div class="f"><span>النسبة الأولى (٪)</span><input id="p1" type="text" inputmode="decimal" value="1"></div>
+<div class="f"><span>النسبة الثانية (٪)</span><input id="p2" type="text" inputmode="decimal" value="5"></div>
+<p class="note">الـ 1٪ بتتحسب من الحساب بحد أقصى = الرسوم الثابتة (20). الإجمالي بيتقرّب لأعلى جنيه صحيح، والكسر بيتضاف على الـ 5٪.</p>
+</details>
+</main>
+<script>
+var $=function(i){return document.getElementById(i)};
+function num(s){
+  s=String(s||"").replace(/[٠-٩]/g,function(d){return "٠١٢٣٤٥٦٧٨٩".indexOf(d)})
+   .replace(/[۰-۹]/g,function(d){return "۰۱۲۳۴۵۶۷۸۹".indexOf(d)})
+   .replace(/[٫,،]/g,".").replace(/[^0-9.]/g,"");
+  var n=parseFloat(s);return isNaN(n)?0:n;
+}
+function money(c){var j=Math.floor(c/100),k=c%100;
+  return String(j).replace(/\B(?=(\d{3})+(?!\d))/g,",")+"."+(k<10?"0":"")+k}
+function calc(){
+  var a=Math.round(num($("amt").value)*100);
+  if(!a){$("rB").textContent="0.00";$("rC").textContent="0.00";$("rD").textContent="0";return}
+  var p1=num($("p1").value)/100,p2=num($("p2").value)/100,cap=Math.round(num($("cap").value)*100);
+  var b=Math.min(Math.round(a*p1),cap);
+  var tot=Math.ceil((a+b+Math.round(a*p2))/100)*100;
+  $("rB").textContent=money(b);$("rC").textContent=money(tot-a-b);
+  $("rD").textContent=String(tot/100).replace(/\B(?=(\d{3})+(?!\d))/g,",");
+}
+["amt","p1","cap","p2"].forEach(function(i){$(i).addEventListener("input",function(){calc();
+  if(i!=="amt"){try{localStorage.setItem("pc_set2",JSON.stringify({p1:$("p1").value,cap:$("cap").value,p2:$("p2").value}))}catch(e){}}})});
+try{var s=JSON.parse(localStorage.getItem("pc_set2")||"null");if(s){$("p1").value=s.p1;$("cap").value=s.cap;$("p2").value=s.p2}}catch(e){}
+$("clr").addEventListener("click",function(){$("amt").value="";calc();$("amt").focus()});
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(function(){})}
+</script>
+</body>
+</html>
